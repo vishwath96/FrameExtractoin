@@ -175,17 +175,38 @@ with col1:
                     # Display results
                     st.markdown(message)
                     
-                    # Provide download link if successful
+                                        # Provide download link if successful
                     if zip_path and os.path.exists(zip_path):
                         with open(zip_path, 'rb') as f:
-                            st.download_button(
-                                label="📥 Download Extracted Frames (ZIP)",
-                                data=f.read(),
-                                file_name="extracted_frames.zip",
-                                mime="application/zip"
-                            )
+                            zip_data = f.read()
+                            
+                        # Create download button
+                        download_clicked = st.download_button(
+                            label="📥 Download Extracted Frames (ZIP)",
+                            data=zip_data,
+                            file_name="extracted_frames.zip",
+                            mime="application/zip"
+                        )
+                        
+                        # Clean up only after download button is created
+                        # Note: We can't detect if user actually downloaded, but this ensures
+                        # the file is available for download before cleanup
+                        if download_clicked:
+                            # Clean up temporary files
+                            os.unlink(tmp_file_path)
+                            
+                            # Clean up the temporary directory and all extracted frames
+                            try:
+                                import shutil
+                                shutil.rmtree(temp_dir)
+                                st.success("✅ Temporary files cleaned up successfully!")
+                            except Exception as cleanup_error:
+                                st.warning(f"⚠️ Could not clean up temporary directory: {cleanup_error}")
+                        else:
+                            # Show cleanup info
+                            st.info("💡 Temporary files will be cleaned up after download")
                     
-                    # Clean up temporary files
+                    # Clean up uploaded video file
                     os.unlink(tmp_file_path)
                     
                 except Exception as e:
